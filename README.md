@@ -23,4 +23,6 @@ python configuration.py 50 1.8 0.9 5
 
 ```
 the first parameter [50 Hz] is trigger rate, [1.8 V] is Ch1 Amp, [0.9 V] is offset,
-[5 us] is the delay time length of Ch2 from Ch1
+[5 us] is the delay time length of Ch2 from Ch1. The external trigger signal synchronized
+with Ch1 when delay time smaller or equal than 5 us, and synchronized with Ch2 when
+delay time larger than 5 us.
