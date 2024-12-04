@@ -2,15 +2,19 @@ import os
 import sys
 
 def check_type(input_param):
-    #检查输入的参数是数字还是字符串
-    if isinstance(input_param, str):
-        # print("输入参数是字符串。")
-        return False
-    elif isinstance(input_param, (int, float)):
-        # print("输入参数是数字。")
+    try:
+        int_value = int(input_param)
+        print(r'{} is int type'.format(input_param))
         return True
-    else:
-        print("Please input a valid parameter type.")
+    except ValueError:
+        if isinstance(input_param, str):
+            print("intput is str")
+            return False
+        elif isinstance(input_param, int):
+            print("intput is int")
+            return True
+        else:
+            print("Please input a valid parameter type.")
 
 def find_parameter_key_index(line, para_map):
     for key in para_map:
@@ -40,16 +44,23 @@ def para_map_gen(trigger_style):
             'OUTFILE_NAME': 'lv2415_lv2414_20241126_12DB_LED_combine_1p7v_850mv_1p36v_680mv_5us_50hz_run0',
             'EXTERNAL_TRIGGER': 'ACQUISITION_ONLY',
             'SELF_TRIGGER': 'NO',
-            'RECORD_LENGTH': '175'
+            'RECORD_LENGTH': '175'  ## 175 5us, 40 S2 only
         }
         if len(sys.argv) != 4:
             print("USAGE: python write_config.py trig_style rec_len file_name")
-            return para_map
+            print("USAGE: python write_config.py ext 40 file_name")
+            sys.exit()
         elif len(sys.argv) == 4:
             if check_type(sys.argv[2]) == True:
                 para_map['RECORD_LENGTH'] = sys.argv[2]
+            elif check_type(sys.argv[2]) == False:                
+                print("please check rec_len type: python write_config.py trig_style[ext] rec_len[int] file_name[str]")     
+                sys.exit()           
             if check_type(sys.argv[3]) == False:
                 para_map['OUTFILE_NAME'] = sys.argv[3]
+            else:
+                print("please check filename type: python write_config.py trig_style[ext] rec_len[int] file_name[str]")
+                sys.exit()                
             return para_map
     elif trigger_style == 'self':
         para_map = {
@@ -62,14 +73,24 @@ def para_map_gen(trigger_style):
         }
         if len(sys.argv) != 5:
             print("USAGE: python write_config.py trig_style rec_len threshold file_name")
-            return para_map
+            print("USAGE: python write_config.py self 40 20 file_name")
+            sys.exit()
         elif len(sys.argv) == 5:
             if check_type(sys.argv[2]) == True:
                 para_map['RECORD_LENGTH'] = sys.argv[2]
+            else:
+                print('please check rec_len type: python write_config.py trig_style[self] rec_len[int] threshold[int] file_name[str] ')                
+                sys.exit()
             if check_type(sys.argv[3]) == True:
                 para_map['TRG_THRESHOLD'] = sys.argv[3]
+            else:
+                print('please check threshold type: python write_config.py trig_style[self] rec_len[int] threshold[int] file_name[str] ')                
+                sys.exit()
             if check_type(sys.argv[4]) == False:
                 para_map['OUTFILE_NAME'] = sys.argv[4]
+            else:
+                print('please check file_name type: python write_config.py trig_style[self] rec_len[int] threshold[int] file_name[str] ')                
+                sys.exit()
         return para_map
     else:
         print("无效的触发器类型")
