@@ -11,11 +11,11 @@ def configure_waveform_generator(
     afg = rm.open_resource(pulse_generator)
     
     # SYNC_CH = ''
-    if delay <= 10:
+    if delay <= 5:
         print(r'external trigger Sync with S1, delay time:{}'.format(delay))
         SYNC_CH = 'CH1'
         afg.write('C1:SYNC ON, TYPE,{}'.format(SYNC_CH))
-    elif delay > 10:
+    elif delay > 5:
         print(r'delay time {} us large than 5us, external trigger Sync with S2'.format(delay))
         SYNC_CH = 'CH2'
         afg.write('C2:SYNC ON, TYPE,{}'.format(SYNC_CH))
