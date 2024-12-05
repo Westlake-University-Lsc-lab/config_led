@@ -7,10 +7,9 @@ if len(argvs) < 4:
     sys.exit()
 fre =  int(sys.argv[1] )
 amp =  float(sys.argv[2] )
-offset =  float(sys.argv[3] )
-delay =  int(sys.argv[4] )
+delay =  int(sys.argv[3] )
 
-config.configure_waveform_generator(fre, amp, offset, delay)
+config.configure_waveform_generator(fre, amp, delay)
 
 
 config.pulse_generator_configure()
