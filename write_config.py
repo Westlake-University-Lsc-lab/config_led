@@ -16,6 +16,7 @@ def check_type(input_param):
         else:
             print("Please input a valid parameter type.")
 
+
 def find_parameter_key_index(line, para_map):
     for key in para_map:
         if line.startswith(key + ' '):  # 检查行首是否有符合键值+空格的开头部分
@@ -37,64 +38,70 @@ def check_match_in_map(para_map, str_to_check):
         return False  
     
     
-def para_map_gen(trigger_style):
+def para_map_gen(trigger_style, rec_len, acq_time, threshold, filename):
     if trigger_style == 'ext':
         para_map = {
             'OUTFILE_PATH': '/mnt/data/PMT/R8520_406/',
             'OUTFILE_NAME': 'lv2415_lv2414_20241126_12DB_LED_combine_1p7v_850mv_1p36v_680mv_5us_50hz_run0',
             'EXTERNAL_TRIGGER': 'ACQUISITION_ONLY',
             'SELF_TRIGGER': 'NO',
-            'RECORD_LENGTH': '175'  ## 175 5us, 40 S2 only
+            'TRG_THRESHOLD': 20,
+            'RECORD_LENGTH': 40,  ## 175 for 5us
+            'ACQ_TIME': 480
         }
-        if len(sys.argv) != 4:
-            print("USAGE: python write_config.py trig_style rec_len file_name")
-            print("USAGE: python write_config.py ext 40 file_name")
+        if check_type(rec_len) == True:
+            para_map['RECORD_LENGTH'] = rec_len
+        elif check_type(rec_len) == False:                
+            print('record length shold be int, number * 10')
             sys.exit()
-        elif len(sys.argv) == 4:
-            if check_type(sys.argv[2]) == True:
-                para_map['RECORD_LENGTH'] = sys.argv[2]
-            elif check_type(sys.argv[2]) == False:                
-                print("please check rec_len type: python write_config.py trig_style[ext] rec_len[int] file_name[str]")     
-                sys.exit()           
-            if check_type(sys.argv[3]) == False:
-                para_map['OUTFILE_NAME'] = sys.argv[3]
-            else:
-                print("please check filename type: python write_config.py trig_style[ext] rec_len[int] file_name[str]")
-                sys.exit()                
-            return para_map
+        if check_type(acq_time) == True:
+            para_map['ACQ_TIME'] = acq_time
+        elif check_type(acq_time) == False:
+            print('record length shold be int unit in seconds')
+            sys.exit()
+        if check_type(threshold) == True:
+            para_map['TRG_THRESHOLD'] = threshold
+        else:
+            print('threshold should be int, 20 ADC for example')
+            sys.exit()           
+        if check_type(filename) == False:
+            para_map['OUTFILE_NAME'] = filename
+        else:
+            print('output filename should be string')
+            sys.exit()
+        #return para_map
     elif trigger_style == 'self':
         para_map = {
             'OUTFILE_PATH': '/mnt/data/PMT/R8520_406/',
             'OUTFILE_NAME': 'lv2415_lv2414_20241118_darkrate_run0',
             'EXTERNAL_TRIGGER': 'DISABLE',
             'SELF_TRIGGER': 'YES',
-            'RECORD_LENGTH': '40',
-            'TRG_THRESHOLD': '20'
+            'RECORD_LENGTH': 40,
+            'TRG_THRESHOLD': 20,
+            'ACQ_TIME': 480
         }
-        if len(sys.argv) != 5:
-            print("USAGE: python write_config.py trig_style rec_len threshold file_name")
-            print("USAGE: python write_config.py self 40 20 file_name")
+        if check_type(rec_len) == True:
+            para_map['RECORD_LENGTH'] = rec_len
+        elif check_type(rec_len) == False:
+            print('record length shold be int, number * 10')
             sys.exit()
-        elif len(sys.argv) == 5:
-            if check_type(sys.argv[2]) == True:
-                para_map['RECORD_LENGTH'] = sys.argv[2]
-            else:
-                print('please check rec_len type: python write_config.py trig_style[self] rec_len[int] threshold[int] file_name[str] ')                
-                sys.exit()
-            if check_type(sys.argv[3]) == True:
-                para_map['TRG_THRESHOLD'] = sys.argv[3]
-            else:
-                print('please check threshold type: python write_config.py trig_style[self] rec_len[int] threshold[int] file_name[str] ')                
-                sys.exit()
-            if check_type(sys.argv[4]) == False:
-                para_map['OUTFILE_NAME'] = sys.argv[4]
-            else:
-                print('please check file_name type: python write_config.py trig_style[self] rec_len[int] threshold[int] file_name[str] ')                
-                sys.exit()
-        return para_map
-    else:
-        print("无效的触发器类型")
-        return None
+        if check_type(threshold) == True:
+            para_map['TRG_THRESHOLD'] = threshold
+        elif check_type(threshold) == Fasle:
+            print('threshold should be int, 20 ADC for example')
+            sys.exit()
+        if check_type(acq_time) == True:
+            para_map['ACQ_TIME'] = acq_time
+        elif check_type(acq_time) == False:
+            print('acq_time should be int unit in second ')
+            sys.exit()
+        if check_type(filename) == False:
+            para_map['OUTFILE_NAME'] = filename
+        elif check_type(filename) == Ture: 
+            print('filename should be string')
+            sys.exit()
+    return para_map
+
 
 def replace_parameters_in_config(para_map, config_file):
     print("Writing new configuration file...")
@@ -115,6 +122,7 @@ def replace_parameters_in_config(para_map, config_file):
             key, value = line.split(' ', 1)  
             new_line = f"{key} {para_map[key]}\n"
             new_lines.append(new_line)  # 将新生成的行加入到新文件中
+            print(r'writing >>>> {}'.format(new_line))
             continue
         else:  # 如果没有找到匹配的键进行替换，则保留原始行（包含注释）
             new_lines.append(line)
@@ -128,13 +136,18 @@ def replace_parameters_in_config(para_map, config_file):
                                                     
 
 def main():
-    if len(sys.argv) < 2:
-        print("Please input a valid trigger style.")
-        print("USAGE: python write_config.py trig_style")
+    if len(sys.argv) != 6:        
+        print("USAGE: python write_config.py ext 40 480 file_name")
+        print('USAGE: python write_config.py trig_style[self] rec_len[int] acq_time[int] threshold[int] file_name[str] ')                
         sys.exit(1)
-    config_file_path = '/home/yjj/pulse_gen/DAW_Config.txt'
-    trigger_style = sys.argv[1]  
-    para_map = para_map_gen(trigger_style)
+    #config_file_path = '/home/yjj/pulse_gen/DAW_Config.txt'
+    config_file_path = '/etc/DAW_Demo/DAW_Config.txt'
+    trigger_style = sys.argv[1]
+    rec_len = sys.argv[2]
+    acq_time = sys.argv[3]
+    threshold = sys.argv[4]
+    filename = sys.argv[5]
+    para_map = para_map_gen(trigger_style, rec_len, acq_time, threshold, filename)
     replace_parameters_in_config(para_map, config_file_path)
 
 if __name__ == "__main__":
